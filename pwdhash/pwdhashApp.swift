@@ -89,7 +89,7 @@ func apply_constraint(_ hash: String, _ size: Int, _ nonalphanumeric: Bool) -> S
     var result = String(dropped.prefix(start_size))
     var extras = Array(dropped.suffix(dropped.count - start_size).reversed())
     
-    func nextExtra () -> UInt32 {
+    func nextExtra() -> UInt32 {
         let last = extras.removeLast()
         if (extras.count != 0) {
             return charCodeAt(last)
@@ -141,13 +141,18 @@ func apply_constraint(_ hash: String, _ size: Int, _ nonalphanumeric: Bool) -> S
 
 struct ContentView: View {
     @State var __ = InitialState()
+    let pasteboard = UIPasteboard.general
     
     private func generate() {
-        let hash = hmac("MD5", __.host, __.password)
-        let size =  __.password.count + __.prefix.count
-        let nonalphanumeric = hasSpecialCharacters(__.password)
-        __.hash = apply_constraint(hash, size, nonalphanumeric)
-        __.is_alert = true
+        if (__.host != "" && __.password != "") {
+            let hash = hmac("MD5", __.host, __.password)
+            let size =  __.password.count + __.prefix.count
+            let nonalphanumeric = hasSpecialCharacters(__.password)
+            let result = apply_constraint(hash, size, nonalphanumeric)
+            pasteboard.string = result
+            __.hash = result
+            __.is_alert = true
+        }
     }
     
     private func reset() {
@@ -192,7 +197,7 @@ struct ContentView: View {
            minHeight: 0, maxHeight: .infinity,
            alignment: .topLeading)
         
-        .alert("Hashed", isPresented: $__.is_alert) {
+        .alert("Copied to clipboard:", isPresented: $__.is_alert) {
             TextField("hash", text: $__.hash)
             Button("OK", role: .cancel) {
                 reset()
